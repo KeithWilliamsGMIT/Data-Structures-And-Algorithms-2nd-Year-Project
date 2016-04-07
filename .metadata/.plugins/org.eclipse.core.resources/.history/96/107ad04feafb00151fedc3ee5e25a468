@@ -1,0 +1,35 @@
+package ie.gmit;
+
+public class InsensitiveString {
+	private String word;
+	
+	public InsensitiveString(String s) {
+		s = word.toLowerCase();
+		
+		// Convert first character in each word to uppercase
+		if (s.length() > 1) {
+			s = s.substring(0, 1).toUpperCase() + s.substring(1);
+		} else {
+			s = s.toUpperCase();
+		}
+		
+		this.word = s;
+	}
+	
+	public String getWord() {
+		return word;
+	}
+	
+	public int hashCode() {
+		return word.toLowerCase().hashCode();
+	}
+	
+	public boolean equals(Object obj) {
+		if (obj instanceof InsensitiveString){
+			InsensitiveString s = (InsensitiveString) obj;
+			return word.equalsIgnoreCase(s.getWord());
+		}else{
+			return false;
+		}
+	}
+}

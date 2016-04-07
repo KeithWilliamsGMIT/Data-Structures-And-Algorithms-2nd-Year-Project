@@ -1,0 +1,155 @@
+/*
+ * Keith Williams (G00324844)
+ * 18/03/2016
+ */
+
+package ie.gmit;
+
+import java.io.*;
+import java.util.*;
+
+public class Index implements IIndex {
+	private Set<String> ignore = new TreeSet<String>();
+	private Map<InsensitiveString, String> dictionary = new HashMap<InsensitiveString, String>();
+	private Map<InsensitiveString, WordDetail> index = new HashMap<InsensitiveString, WordDetail>();
+	
+	public Index () {
+		try {
+			parseIgnore("../stopwords.txt");
+			parseDictionary("../dictionary.csv");
+			//parseText("../PoblachtNaHEireann.txt");
+			//parseText("../DeBelloGallico.txt");
+			parseText("../WarAndPeace-LeoTolstoy.txt");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	// Initialize the ignore set with words from specified text file
+	private void parseIgnore(String filename) throws Exception {
+		// Open ignore/stopwords file
+		BufferedReader br = new BufferedReader (new InputStreamReader (new FileInputStream (filename)));
+		String line = null;
+		
+		// Read file line by line until eof O(n)
+		// Add each word to ignore set O(1)
+		while ((line = br.readLine()) != null) {
+			ignore.add(line);
+		}
+	}
+	
+	// Initialize the dictionary map with words from specified file
+	private void parseDictionary(String filename) throws Exception {
+		// Open dictionary file
+		BufferedReader br = new BufferedReader (new InputStreamReader (new FileInputStream (filename)));
+		String line = null;
+		InsensitiveString key;
+		
+		// Read file line by line until eof O(n)
+		// Add each word to dictionary map O(1)
+		while ((line = br.readLine()) != null) {
+			// Get the word the definition if for by
+			// 1) splitting the string into two when the first delimiter is reached (",")
+			// 2) removing the first character (which is a double quote) from the resulting string
+			String word = line.split("\",\"", 2)[0].substring(1);
+			String definition = line;
+			key = new InsensitiveString(word);
+			
+			// If the definition spans more than one line
+			// i.e. the line does not end with a double quote
+			// continue reading lines until this condition is met
+			// and append the line to the definition
+			while (line.substring (line.length() - 1).compareTo("\"") != 0) {
+				if ((line = br.readLine()) != null) {
+					definition += line;
+				}
+			}
+			
+			if (dictionary.containsKey(key)) {
+				definition += "\n" + dictionary.get(key);
+			}
+			
+			dictionary.put(key, definition);
+		}
+	}
+	
+	// Initialize the map with words and word details (i.e. definition & page)
+	// from specified text file
+	private void parseText(String filename) throws Exception {
+		// Open text file
+		BufferedReader br = new BufferedReader (new InputStreamReader (new FileInputStream (filename)));
+		String line = null;
+		int page = 1;
+		int lineCounter = 0;
+		InsensitiveString word;
+		
+		// Read file line by line until eof O(n)
+		while ((line = br.readLine()) != null) {
+			++lineCounter;
+			
+			if (lineCounter % 40 == 0) {
+				++page;
+			}
+			
+			// Remove all non word characters from line except white spaces
+			line = line.replaceAll("[\\W&&\\S]+", "");
+			
+			// Split line up into single words
+			String[] words = line.split("\\s+");
+			
+			// Loop over words O(n)
+			for (int i = 0; i < words.length; ++i) {
+				word = new InsensitiveString(words[i]);
+				
+				if (ignore.contains(words[i])) continue;
+
+				if (index.containsKey(word)) {
+					WordDetail wd = index.get(word);
+					wd.addIndex(page);
+				} else {
+					WordDetail wd = new WordDetail(page);
+					index.put (word, wd);
+					String definition = dictionary.get(word);
+					
+					if (definition != null) {
+						wd.setDefinition(definition);
+					}
+				}
+			}
+		}
+	}
+	
+	// This method is used to output the index to the screen
+	// This method is O(n) due to the loop required to iterate over map values
+	public void printIndex() {
+		Collection<InsensitiveString> keys = index.keySet();
+		
+		for (InsensitiveString key : keys) { // O(n) - Must loop over every key in the map
+			System.out.printf("%-20s%s\n", key.getWord(), index.get(key).toString());
+		}
+	}
+	
+	// This method is used for displaying the values in the dictionary map
+	// This method is O(n) due to the loop required to print each line
+	public void printDictionary() {
+		Collection<InsensitiveString> keys = dictionary.keySet();
+		
+		for (InsensitiveString key : keys) { // O(n) - Must loop over every key in the map
+			System.out.printf("%-20s%s\n", key.getWord(), dictionary.get(key).toString());
+		}
+	}
+	
+	public void search() {
+		Scanner scanner = new Scanner(System.in);
+		System.out.println("Enter word to search for: ");
+		String word = scanner.next();
+		
+		InsensitiveString key = new InsensitiveString ("Chapter");
+		
+		if (index.containsKey(key)){ // O(1) operation
+			System.out.println("Found word:\n" + index.get(key).toString());
+		}else{
+			System.out.println(key.getWord() + " was not found!");
+		}
+	}
+}

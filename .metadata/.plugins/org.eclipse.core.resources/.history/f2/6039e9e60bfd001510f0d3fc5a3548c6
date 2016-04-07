@@ -1,0 +1,16 @@
+/*
+ * Keith Williams (G00324844)
+ * 18/03/2016
+ */
+
+package ie.gmit;
+
+import java.util.Collection;
+import java.util.Scanner;
+
+public interface IIndex {
+	public void printIndex();
+	public void printDictionary();
+	public void search();
+	public void parseText(String text) throws Exception;
+}

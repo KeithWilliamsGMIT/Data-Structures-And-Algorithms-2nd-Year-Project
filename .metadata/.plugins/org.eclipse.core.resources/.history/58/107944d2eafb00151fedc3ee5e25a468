@@ -1,0 +1,10 @@
+/*
+ * Keith Williams (G00324844)
+ * 18/03/2016
+ */
+
+package ie.gmit;
+
+public interface IIndex {
+
+}
